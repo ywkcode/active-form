@@ -69,8 +69,12 @@ function uuid(len, radix) {
 }
 const handledragstart = (event) => {
   configCircle.id = uuid(32, "");
+  let newCircle=JSON.parse(JSON.stringify(configCircle));
+  configCircles.push(newCircle);
+  debugger;
+ 
   console.log(configCircle.id);
-  configCircles.push(configCircle);
+ 
 };
 let configCircles = reactive([]);
 configCircles.push(configCircle);
@@ -88,14 +92,17 @@ let selectItem = ref({
 watch(
   selectItem,
   (newvalue, oldvalue) => {
-    debugger;
+     var result=configCircles.find((item)=>item.id===newvalue.id);
+     debugger;
+     result.x=parseInt(newvalue.x);
+    
   },
   { deep: true }
 );
 watch(
   message,
   (newvalue, oldvalue) => {
-    debugger;
+     
   },
   { deep: true }
 );
@@ -132,8 +139,8 @@ watch(
     <p>影响元素</p>
     <!-- {{ message }}
     <Input v-model="message" placeholder="edit me"></Input> -->
-    <p>Message is: {{ message }}</p>
-	<input v-model="message" placeholder="edit me" />
+    <p>Message is: {{ selectItem.x }}</p>
+	<input v-model="selectItem.x" placeholder="edit me"  />
   </div>
 </template>
 
