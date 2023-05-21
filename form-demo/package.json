@@ -9,8 +9,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "element-plus": "^2.3.5",
     "konva": "^9.0.2",
+    "sass": "^1.62.1",
     "vue": "^3.2.47",
+    "vue-draggable-next": "^2.1.1",
     "vue-konva": "^3.0.2",
     "vue-uuid": "^3.0.0"
   },

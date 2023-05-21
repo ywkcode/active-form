@@ -1,42 +1,5 @@
 <script setup>
-import { ref, reactive, watch } from "vue";
-
-const configKonva = reactive({
-  width: 1000,
-  height: 1000,
-});
-
-const message = ref("");
-const state = reactive({
-  title: "hello",
-  id: 1,
-  items: [
-    { name: "标题1", value: 1 },
-    { name: "标题2", value: 2 },
-    { name: "标题3", value: 3 },
-  ],
-}); //参数是一个普通对象
-const configCircle = reactive({
-  id: uuid(32, ""),
-  type: "圆圈",
-  x: 100,
-  y: 100,
-  radius: 10,
-  fill: "red",
-  stroke: "black",
-  draggable: true,
-  strokeWidth: 3,
-});
-const textConfig = reactive({
-  x: 100,
-  y: 150,
-  text: "文本",
-  fontSize: 20,
-  fill: "red",
-  draggable: true,
-});
-const handledragend = (event) => {};
-
+import { ref, reactive, watch, toRefs } from "vue";
 function uuid(len, radix) {
   var chars =
     "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".split("");
@@ -67,81 +30,195 @@ function uuid(len, radix) {
 
   return uuid.join("");
 }
-const handledragstart = (event) => {
-  configCircle.id = uuid(32, "");
-  let newCircle=JSON.parse(JSON.stringify(configCircle));
-  configCircles.push(newCircle);
-  debugger;
- 
-  console.log(configCircle.id);
- 
-};
-let configCircles = reactive([]);
-configCircles.push(configCircle);
-
-function handleClick(item) {
-  selectItem.value = item.currentTarget.attrs;
-}
-
-let selectItem = ref({
-  id: "",
-  type: "",
-  x: 0,
+const form = reactive({
+  name: "",
+  region: "",
+  date1: "",
+  date2: "",
+  delivery: false,
+  type: [],
+  resource: "",
+  desc: "",
 });
 
+const onSubmit = () => {
+  console.log("submit!");
+};
+const lists = ref("A");
+let selectedId = "111";
+let selectedComponent = ref({
+  id: "",
+});
+//看板接受到元素
+const drop = (event) => {
+  selectedComponent.value = {
+    id: uuid(32, ""),
+    x: event.offsetX,
+    y: event.offsetY,
+    text: "请输入内容",
+    width: 100,
+    height: 50,
+    fontSize: 15,
+    fill: "green",
+  };
+
+  componnetslist.push(selectedComponent.value);
+};
+//左侧元素 -拖动
+const dragstart = (event, item) => {};
+let componnetslist = reactive([]); //所有的元素
+
+const configKonva = reactive({
+  width: 1314,
+  height: 750,
+  fill: "red",
+});
+
+//看板中的元素拖动
+const handlecomponentdragstart = (event,id) => {
+    var result = componnetslist.find((item) => item.id == id);
+   result.x=event.evt.clientX;
+     result.y=event.evt.clientY;
+  selectedComponent.value = { ...result }; 
+   console.log(JSON.stringify(selectedComponent.value));
+};
+
+const handlecomponentdragend = () => {};
+
+
+const dragover = () => {
+  // console.log("dragover");
+};
+const dragleave = () => {
+  // console.log("dragleave");
+};
+function handleClick(event, id) {
+  var result = componnetslist.find((item) => item.id == id);
+  selectedComponent.value = { ...result };
+
+  console.log(selectedComponent.value);
+  // selectedComponent.node = reactive();
+}
 watch(
-  selectItem,
+  selectedComponent,
   (newvalue, oldvalue) => {
-     var result=configCircles.find((item)=>item.id===newvalue.id);
-     debugger;
-     result.x=parseInt(newvalue.x);
-    
-  },
-  { deep: true }
-);
-watch(
-  message,
-  (newvalue, oldvalue) => {
-     
+     var result=componnetslist.find((item)=>item.id===newvalue.id); 
+     result.x=newvalue.x;
+       result.text=newvalue.text;
   },
   { deep: true }
 );
 </script>
 
 <template>
-  <v-stage :config="configKonva">
-    <v-layer>
-      <v-circle
-        :config="item"
-        v-for="item in configCircles"
-        @dragend="handledragend"
-        @dragstart="handledragstart"
-        @click="handleClick"
-      >
-      </v-circle>
-      <v-text :config="textConfig"></v-text>
-    </v-layer>
-  </v-stage>
+  <div style="" class="wf_tools">
+    <el-divider content-position="center">拖拽元素</el-divider>
+    <div
+      @dragstart="dragstart($event, '111')"
+      @dragover.prevent
+      class="tools_item"
+    >
+      <img src="./assets/txt_input.png" draggable="true" />
+      <p>文本框</p>
+    </div>
+  </div>
+  <div class="wf_drawer">
+    <el-divider content-position="center">看板</el-divider>
+
+    <div
+      @drop="drop"
+      @dragover="dragover"
+      @dragleave="dragleave"
+      @dragover.prevent
+      style="border: 1px solid gray; min-height: 750px; margin: 5px"
+    >
+      <v-stage :config="configKonva">
+        <v-layer>
+          <v-text
+            v-for="item in componnetslist"
+            :config="item"
+            draggable="true"
+            @dragstart="handlecomponentdragstart($event, item.id)"
+            @dragend="handlecomponentdragend"
+            @click="handleClick($event, item.id)"
+          />
+        </v-layer>
+      </v-stage>
+      <!-- {{ JSON.stringify(componnetslist) }} -->
+    </div>
+  </div>
   <div
-    style="
-      position: absolute;
-      right: 100px;
-      top: 10px;
-      border: 1px solid red;
-      width: 200px;
-      height: 400px;
-      text-align: left;
-      padding: 5px;
-    "
+    style="width: 20%; display: inline-block; float: left; text-align: center"
+    class="wf_setting"
   >
-    <p>选中元素Id:{{ selectItem.id }}</p>
-    <p>元素类型:{{ selectItem.type }}</p>
-    <p>影响元素</p>
-    <!-- {{ message }}
-    <Input v-model="message" placeholder="edit me"></Input> -->
-    <p>Message is: {{ selectItem.x }}</p>
-	<input v-model="selectItem.x" placeholder="edit me"  />
+    <el-divider content-position="center">元素属性</el-divider>
+
+    <el-form :model="form" label-width="120px">
+      <el-form-item label="组件Id"> {{ selectedComponent.id }} </el-form-item>
+      <el-form-item label="背景色">
+        <el-select v-model="form.region" placeholder="请选择颜色">
+          <el-option label="红色" value="红色" />
+          <el-option label="蓝色" value="蓝色" />
+        </el-select>
+      </el-form-item>
+       <el-form-item label="组件内容">
+        <el-input v-model="selectedComponent.text" />
+      </el-form-item>
+      <el-form-item label="组件宽度">
+        <el-input v-model="selectedComponent.width" />
+      </el-form-item>
+      <el-form-item label="组件高度">
+        <el-input v-model="selectedComponent.height" />
+      </el-form-item>
+      <el-form-item label="组件位置：x轴">
+        <el-input v-model="selectedComponent.x" />
+      </el-form-item>
+      <el-form-item label="组件位置：y轴">
+        <el-input v-model="selectedComponent.y" />
+      </el-form-item>
+      <el-form-item>
+        <el-button type="primary" @click="onSubmit">保存</el-button>
+        <el-button>重置</el-button>
+      </el-form-item>
+    </el-form>
   </div>
 </template>
 
-<style scoped></style>
+<style scoped lang="scss">
+.wf_tools {
+  text-align: center;
+  min-height: 800px;
+  border-right: 1px solid gray !important;
+  width: 10%;
+  display: inline-block;
+  border-right: 1px solid black;
+  float: left;
+  ul {
+    list-style: none;
+    padding: 0px;
+  }
+  .tools_item img {
+    width: 50px;
+    height: 50px;
+    cursor: pointer;
+  }
+  .tools_item p {
+    padding: 0px;
+    margin: 0px;
+    font-size: 12px;
+  }
+}
+.wf_drawer {
+  width: 69%;
+  display: inline-block;
+  border-right: 1px solid gray !important;
+  min-height: 800px;
+  float: left;
+}
+.wf_setting {
+  width: 20%;
+  display: inline-block;
+  min-height: 800px;
+  float: left;
+}
+</style>
