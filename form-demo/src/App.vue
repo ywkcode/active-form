@@ -30,6 +30,8 @@ function uuid(len, radix) {
 
   return uuid.join("");
 }
+let isshowreact = ref(false);
+let reactConfig = reactive({});
 const form = reactive({
   name: "",
   region: "",
@@ -39,6 +41,17 @@ const form = reactive({
   type: [],
   resource: "",
   desc: "",
+});
+
+const settingform = reactive({
+  width: 800,
+  height: 800,
+  backgroundColor: "#e2e1e1",
+  margin: 5,
+  padding: 5,
+  fontfamily:'微软雅黑',
+  fontsize:12,
+  color:'black'
 });
 
 const onSubmit = () => {
@@ -73,18 +86,19 @@ const configKonva = reactive({
   height: 750,
   fill: "red",
 });
-
+const activeName = ref("first");
+const handleTabClick = (tab, event) => {
+  console.log(tab, event);
+};
 //看板中的元素拖动
-const handlecomponentdragstart = (event,id) => {
-    var result = componnetslist.find((item) => item.id == id);
-   result.x=event.evt.clientX;
-     result.y=event.evt.clientY;
-  selectedComponent.value = { ...result }; 
-   console.log(JSON.stringify(selectedComponent.value));
+const handlecomponentdragstart = (event, id) => {
+  var result = componnetslist.find((item) => item.id == id);
+  result.x = event.evt.clientX;
+  result.y = event.evt.clientY;
+  selectedComponent.value = { ...result };
 };
 
 const handlecomponentdragend = () => {};
-
 
 const dragover = () => {
   // console.log("dragover");
@@ -92,19 +106,22 @@ const dragover = () => {
 const dragleave = () => {
   // console.log("dragleave");
 };
-function handleClick(event, id) {
+const handleClick = (event, id) => {
   var result = componnetslist.find((item) => item.id == id);
   selectedComponent.value = { ...result };
+  this.isshowreact.value = true;
+  reactConfig.x = selectedComponent.value.x;
+  reactConfig.y = selectedComponent.value.y;
+  reactConfig.width = result.width;
+  reactConfig.height = result.height;
+};
 
-  console.log(selectedComponent.value);
-  // selectedComponent.node = reactive();
-}
 watch(
   selectedComponent,
   (newvalue, oldvalue) => {
-     var result=componnetslist.find((item)=>item.id===newvalue.id); 
-     result.x=newvalue.x;
-       result.text=newvalue.text;
+    var result = componnetslist.find((item) => item.id === newvalue.id);
+    result.x = newvalue.x;
+    result.text = newvalue.text;
   },
   { deep: true }
 );
@@ -124,63 +141,114 @@ watch(
   </div>
   <div class="wf_drawer">
     <el-divider content-position="center">看板</el-divider>
-
-    <div
-      @drop="drop"
-      @dragover="dragover"
-      @dragleave="dragleave"
-      @dragover.prevent
-      style="border: 1px solid gray; min-height: 750px; margin: 5px"
-    >
-      <v-stage :config="configKonva">
-        <v-layer>
-          <v-text
-            v-for="item in componnetslist"
-            :config="item"
-            draggable="true"
-            @dragstart="handlecomponentdragstart($event, item.id)"
-            @dragend="handlecomponentdragend"
-            @click="handleClick($event, item.id)"
-          />
-        </v-layer>
-      </v-stage>
-      <!-- {{ JSON.stringify(componnetslist) }} -->
+    <div style="overflow: hidden; overflow-x: auto">
+      <div
+        @drop="drop"
+        @dragover="dragover"
+        @dragleave="dragleave"
+        @dragover.prevent
+        :style="{
+          'background-color': settingform.backgroundColor,
+          width: settingform.width + 'px',
+          height: settingform.height + 'px',
+          border: '1px solid black',
+          padding: settingform.padding + 'px',
+          overflow: 'hidden',
+          margin:'0 auto',
+          'font-family':settingform.fontfamily,
+          'font-size':settingform.fontSize+ 'px',
+          color: settingform.color
+        }"
+        id="container"
+      >
+        <v-stage :config="configKonva" ref="stage">
+          <v-layer>
+            <v-rect
+              :config="{
+                x: reactConfig.x,
+                y: reactConfig.y,
+                width: reactConfig.width,
+                height: reactConfig.height,
+                fill: 'red',
+              }"
+              v-if="isshowreact"
+            />
+            <v-text
+              v-for="item in componnetslist"
+              :config="item"
+              draggable="true"
+              @dragstart="handlecomponentdragstart($event, item.id)"
+              @dragend="handlecomponentdragend"
+              @click="handleClick($event, item.id)"
+              style="cursor: pointer"
+            />
+          </v-layer>
+        </v-stage>
+        <!-- {{ JSON.stringify(componnetslist) }} -->
+      </div>
     </div>
   </div>
   <div
     style="width: 20%; display: inline-block; float: left; text-align: center"
     class="wf_setting"
   >
-    <el-divider content-position="center">元素属性</el-divider>
-
-    <el-form :model="form" label-width="120px">
-      <el-form-item label="组件Id"> {{ selectedComponent.id }} </el-form-item>
-      <el-form-item label="背景色">
-        <el-select v-model="form.region" placeholder="请选择颜色">
-          <el-option label="红色" value="红色" />
-          <el-option label="蓝色" value="蓝色" />
-        </el-select>
-      </el-form-item>
-       <el-form-item label="组件内容">
-        <el-input v-model="selectedComponent.text" />
-      </el-form-item>
-      <el-form-item label="组件宽度">
-        <el-input v-model="selectedComponent.width" />
-      </el-form-item>
-      <el-form-item label="组件高度">
-        <el-input v-model="selectedComponent.height" />
-      </el-form-item>
-      <el-form-item label="组件位置：x轴">
-        <el-input v-model="selectedComponent.x" />
-      </el-form-item>
-      <el-form-item label="组件位置：y轴">
-        <el-input v-model="selectedComponent.y" />
-      </el-form-item>
-      <el-form-item>
-        <el-button type="primary" @click="onSubmit">保存</el-button>
-        <el-button>重置</el-button>
-      </el-form-item>
-    </el-form>
+    <el-divider content-position="center">配置</el-divider>
+    <el-tabs v-model="activeName" class="demo-tabs" @tab-click="handleTabClick">
+      <el-tab-pane label="元素配置" name="first">
+        <el-form :model="form" label-width="120px">
+          <el-form-item label="组件Id">
+            {{ selectedComponent.id }}
+          </el-form-item>
+          <el-form-item label="背景色">
+            <el-select v-model="form.region" placeholder="请选择颜色">
+              <el-option label="红色" value="红色" />
+              <el-option label="蓝色" value="蓝色" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="组件内容">
+            <el-input v-model="selectedComponent.text" />
+          </el-form-item>
+          <el-form-item label="组件宽度">
+            <el-input v-model="selectedComponent.width" />
+          </el-form-item>
+          <el-form-item label="组件高度">
+            <el-input v-model="selectedComponent.height" />
+          </el-form-item>
+          <el-form-item label="组件位置：x轴">
+            <el-input v-model="selectedComponent.x" />
+          </el-form-item>
+          <el-form-item label="组件位置：y轴">
+            <el-input v-model="selectedComponent.y" />
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary">保存</el-button>
+            <el-button>重置</el-button>
+          </el-form-item>
+        </el-form>
+      </el-tab-pane>
+      <el-tab-pane label="表单配置" name="second">
+        <el-form :model="settingform" label-width="80px">
+          <el-form-item label="表单宽度">
+            <el-input v-model="settingform.width" />
+          </el-form-item>
+            <el-form-item label="表单高度">
+            <el-input v-model="settingform.height" />
+          </el-form-item>
+             <el-form-item label="背景色">
+            <el-input v-model="settingform.backgroundColor" />
+          </el-form-item>
+            <el-form-item label="边距">
+            <el-input v-model="settingform.margin" />
+          </el-form-item>
+           <el-form-item label="字体">
+            <el-input v-model="settingform.fontfamily" />
+          </el-form-item>
+             <el-form-item label="字体大小">
+            <el-input v-model="settingform.fontsize" />
+          </el-form-item>
+        </el-form>
+      </el-tab-pane>
+    </el-tabs>
   </div>
 </template>
 
@@ -220,5 +288,14 @@ watch(
   display: inline-block;
   min-height: 800px;
   float: left;
+}
+.demo-tabs {
+  padding: 0px 10px;
+}
+.demo-tabs > .el-tabs__content {
+  padding: 32px;
+  color: #6b778c;
+  font-size: 32px;
+  font-weight: 600;
 }
 </style>
