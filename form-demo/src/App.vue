@@ -1,5 +1,15 @@
 <script setup>
 import { ref, reactive, watch, toRefs } from "vue";
+import {
+  Check,
+  Delete,
+  Edit,
+  Message,
+  Search,
+  Star,
+  View,
+} from "@element-plus/icons-vue";
+import { ElMessage } from 'element-plus'
 function uuid(len, radix) {
   var chars =
     "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".split("");
@@ -49,9 +59,9 @@ const settingform = reactive({
   backgroundColor: "#e2e1e1",
   margin: 5,
   padding: 5,
-  fontfamily:'微软雅黑',
-  fontsize:12,
-  color:'black'
+  fontfamily: "微软雅黑",
+  fontSize: 20,
+  color: "black",
 });
 
 const onSubmit = () => {
@@ -71,10 +81,11 @@ const drop = (event) => {
     text: "请输入内容",
     width: 100,
     height: 50,
-    fontSize: 15,
+    fontSize: settingform.fontSize,
     fill: "green",
+    
   };
-
+  
   componnetslist.push(selectedComponent.value);
 };
 //左侧元素 -拖动
@@ -109,13 +120,29 @@ const dragleave = () => {
 const handleClick = (event, id) => {
   var result = componnetslist.find((item) => item.id == id);
   selectedComponent.value = { ...result };
-  this.isshowreact.value = true;
-  reactConfig.x = selectedComponent.value.x;
-  reactConfig.y = selectedComponent.value.y;
-  reactConfig.width = result.width;
-  reactConfig.height = result.height;
+ 
+  // reactConfig.x = selectedComponent.value.x;
+  // reactConfig.y = selectedComponent.value.y;
+  // reactConfig.width = selectedComponent.value.width;
+  // reactConfig.height = selectedComponent.value.height;
+  reactConfig={...selectedComponent.value};
 };
 
+const handleSave = () => {
+   let data={
+      settingform:settingform,
+      componentslist:componnetslist
+   }
+   ElMessage('保存成功!数据如下：'+JSON.stringify(data));
+};
+
+const handleFresh = () => {
+   componnetslist.length =0;
+   ElMessage('清空成功！')
+};
+const handleView = () => {
+   ElMessage('开始预览！')
+};
 watch(
   selectedComponent,
   (newvalue, oldvalue) => {
@@ -140,7 +167,23 @@ watch(
     </div>
   </div>
   <div class="wf_drawer">
-    <el-divider content-position="center">看板</el-divider>
+    <div style="padding: 10px 5px">
+      <div style="text-align: left; width: 35%; display: inline-block">
+        <el-tag :size="large">看板数据：</el-tag>
+      </div>
+      <div style="text-align: right; width: 64%; display: inline-block">
+        <el-tooltip content="保存" placement="bottom" effect="light">
+          <el-button type="success" :icon="Check" circle @click="handleSave" />
+        </el-tooltip>
+        <el-tooltip content="清空" placement="bottom" effect="light">
+          <el-button type="danger" :icon="Delete" circle @click="handleFresh" />
+        </el-tooltip>
+        <el-tooltip content="预览" placement="bottom" effect="light" >
+          <el-button type="primary" :icon="View" circle @click="handleView" />
+        </el-tooltip>
+      </div>
+    </div>
+
     <div style="overflow: hidden; overflow-x: auto">
       <div
         @drop="drop"
@@ -154,10 +197,10 @@ watch(
           border: '1px solid black',
           padding: settingform.padding + 'px',
           overflow: 'hidden',
-          margin:'0 auto',
-          'font-family':settingform.fontfamily,
-          'font-size':settingform.fontSize+ 'px',
-          color: settingform.color
+          margin: '0 auto',
+          'font-family': settingform.fontfamily,
+          'font-size': settingform.fontSize + 'px',
+          color: settingform.color,
         }"
         id="container"
       >
@@ -205,6 +248,9 @@ watch(
               <el-option label="蓝色" value="蓝色" />
             </el-select>
           </el-form-item>
+               <el-form-item label="文字大小">
+            <el-input v-model="selectedComponent.fontSize" type="number"/>
+          </el-form-item>
           <el-form-item label="组件内容">
             <el-input v-model="selectedComponent.text" />
           </el-form-item>
@@ -220,6 +266,7 @@ watch(
           <el-form-item label="组件位置：y轴">
             <el-input v-model="selectedComponent.y" />
           </el-form-item>
+        
           <el-form-item>
             <el-button type="primary">保存</el-button>
             <el-button>重置</el-button>
@@ -231,20 +278,20 @@ watch(
           <el-form-item label="表单宽度">
             <el-input v-model="settingform.width" />
           </el-form-item>
-            <el-form-item label="表单高度">
+          <el-form-item label="表单高度">
             <el-input v-model="settingform.height" />
           </el-form-item>
-             <el-form-item label="背景色">
+          <el-form-item label="背景色">
             <el-input v-model="settingform.backgroundColor" />
           </el-form-item>
-            <el-form-item label="边距">
+          <el-form-item label="边距">
             <el-input v-model="settingform.margin" />
           </el-form-item>
-           <el-form-item label="字体">
+          <el-form-item label="字体">
             <el-input v-model="settingform.fontfamily" />
           </el-form-item>
-             <el-form-item label="字体大小">
-            <el-input v-model="settingform.fontsize" />
+          <el-form-item label="字体大小">
+            <el-input v-model="settingform.fontSize" />
           </el-form-item>
         </el-form>
       </el-tab-pane>
